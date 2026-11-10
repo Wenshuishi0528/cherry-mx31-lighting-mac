@@ -76,14 +76,14 @@ struct ContentView: View {
         VStack(alignment: .leading, spacing: 20) {
             heading("点亮你的桌面", "调整主键区背光。选择完成后，点击「应用到键盘」。")
             VStack(alignment: .leading, spacing: 9) {
-                KeyboardPreview(color: model.color, mode: model.mode, brightness: model.brightness)
+                KeyboardPreview(color: model.color, mode: model.mode, rainbow: model.displaysRainbow, brightness: model.brightness)
                 HStack { Text("CHERRY MX 3.1 RGB").font(.caption).fontWeight(.medium); if let state = model.state { Text("· 板载配置 \(Int(state.profileIndex) + 1)").font(.caption).foregroundStyle(.secondary) }; Spacer(); Text("布局示意 · 颜色预览").font(.caption).foregroundStyle(.secondary) }
             }
             card {
                 HStack { Text("灯效").font(.headline); Spacer(); Text(model.effect?.detail ?? "键盘当前为其他模式，选择下方灯效后可应用。").font(.caption).foregroundStyle(.secondary) }
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 5), spacing: 8) {
                     ForEach(LightEffect.all) { effect in
-                        Button { model.mode = effect.id } label: {
+                        Button { model.selectEffect(effect.id) } label: {
                             VStack(spacing: 8) { Image(systemName: effect.symbol).font(.system(size: 19)); Text(effect.name).font(.callout) }
                                 .frame(maxWidth: .infinity).padding(.vertical, 14)
                                 .foregroundStyle(model.mode == effect.id ? accent : .primary)
@@ -103,12 +103,23 @@ struct ContentView: View {
                     }
                 }.padding(.top, 3)
                 Divider()
+                HStack {
+                    Text("颜色模式").font(.headline)
+                    Picker("颜色模式", selection: Binding(get: { model.displaysRainbow }, set: { model.setColorful($0) })) {
+                        Text("单色").tag(false)
+                        Text("彩色 · 彩虹").tag(true)
+                    }.pickerStyle(.segmented).labelsHidden().frame(width: 240).disabled(model.busy)
+                    Spacer()
+                }
+                if model.displaysRainbow {
+                    Text("使用键盘内置的多彩灯效，可调亮度和速度。选择彩色时，常亮会切换为彩虹波浪。").font(.caption).foregroundStyle(.secondary)
+                }
                 HStack(spacing: 12) {
-                    ColorPicker("颜色", selection: $model.color, supportsOpacity: false).fixedSize().onChange(of: model.color) { _, value in model.colorChanged(value) }
-                    TextField("RRGGBB", text: $model.hex).font(.system(.body, design: .monospaced)).frame(width: 82).textFieldStyle(.roundedBorder).onSubmit { model.setHex(model.hex) }.accessibilityLabel("六位十六进制颜色")
-                    Button("随机选色", systemImage: "shuffle") { model.randomizeColor() }.disabled(model.busy).help("生成一个新的随机颜色，点击应用后生效；内置彩色灯效会切换为常亮。")
+                    ColorPicker("单色", selection: $model.color, supportsOpacity: false).fixedSize().disabled(model.displaysRainbow).onChange(of: model.color) { _, value in model.colorChanged(value) }
+                    TextField("RRGGBB", text: $model.hex).font(.system(.body, design: .monospaced)).frame(width: 82).textFieldStyle(.roundedBorder).disabled(model.displaysRainbow).onSubmit { model.setHex(model.hex) }.accessibilityLabel("六位十六进制颜色")
+                    Button("随机选色", systemImage: "shuffle") { model.randomizeColor() }.disabled(model.busy).help("随机挑选一种单色，点击应用后生效；彩色效果请使用上方的颜色模式。")
                     ForEach(["FFDDB0", "FFFFFF", "66E3C4", "67A8FF", "C4A0FF", "FF6B91"], id: \.self) { hex in
-                        Button { model.setHex(hex) } label: { Circle().fill(swatch(hex)).frame(width: 21, height: 21).overlay(Circle().stroke(.gray.opacity(0.25))) }.buttonStyle(.plain).help("#\(hex)")
+                        Button { model.setHex(hex) } label: { Circle().fill(swatch(hex)).frame(width: 21, height: 21).overlay(Circle().stroke(.gray.opacity(0.25))) }.buttonStyle(.plain).disabled(model.displaysRainbow).help("#\(hex)")
                     }
                     Spacer(minLength: 0)
                 }
@@ -140,7 +151,7 @@ struct ContentView: View {
                         RoundedRectangle(cornerRadius: 9).fill(swatch(profile.hex)).frame(width: 42, height: 42)
                         VStack(alignment: .leading, spacing: 5) {
                             Text(profile.name).font(.headline)
-                            Text("\(LightEffect.all.first { $0.id == profile.mode }?.name ?? "其他") · 亮度 \(profile.brightness)/4 · #\(profile.hex)").font(.caption).foregroundStyle(.secondary)
+                            Text("\(LightEffect.all.first { $0.id == profile.mode }?.name ?? "其他") · 亮度 \(profile.brightness)/4 · \(profile.isColorful ? "彩色" : "#\(profile.hex)")").font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
                         Button("载入") { model.load(profile); panel = .lights }
@@ -183,7 +194,7 @@ struct ContentView: View {
             card {
                 HStack { Text("版本 / Version").font(.headline); Spacer(); Text("v\(AppMetadata.version)").font(.title3).fontWeight(.semibold).monospacedDigit() }
                 Text("作者 / Author：\(AppMetadata.author)").textSelection(.enabled)
-                Text("为 CHERRY MX 3.1 RGB 提供灯效、随机选色、本机方案和常用按键设置。\nNative macOS controls for CHERRY MX 3.1 RGB lighting, random colors, local profiles and key remapping.")
+                Text("为 CHERRY MX 3.1 RGB 提供单色与彩色灯效、随机选色、本机方案和常用按键设置。\nNative macOS controls for CHERRY MX 3.1 RGB lighting, single-color and rainbow effects, random color selection, local profiles and key remapping.")
                 HStack {
                     Link("GitHub 项目 / Project", destination: AppMetadata.repositoryURL)
                     Link("CC BY-NC 4.0", destination: AppMetadata.licenseURL)

@@ -11,6 +11,7 @@ private struct PreviewKey {
 struct KeyboardPreview: View {
     let color: Color
     let mode: UInt8
+    let rainbow: Bool
     let brightness: Double
     private var keys: [PreviewKey] {
         var keys = [PreviewKey(label: "esc", x: 0, y: 0)]
@@ -44,7 +45,7 @@ struct KeyboardPreview: View {
             for key in keys {
                 let rect = CGRect(x: offset.x + key.x * unit + 1.8, y: offset.y + key.y * unit + 1.8, width: key.width * unit - 3.6, height: key.height * unit - 3.6)
                 let path = Path(roundedRect: rect, cornerRadius: 3)
-                let keyColor = [UInt8(0), 1, 0x0a].contains(mode) ? Color(hue: key.x / 26 + 0.03, saturation: 0.65, brightness: 1) : color
+                let keyColor = rainbow || [UInt8(1), 0x0a].contains(mode) ? Color(hue: key.x / 26 + 0.03, saturation: 0.65, brightness: 1) : color
                 context.fill(path, with: .color(Color(white: 0.16)))
                 context.stroke(path, with: .color(keyColor.opacity(brightness == 0 ? 0.10 : 0.22 + brightness * 0.15)), lineWidth: 1)
                 context.draw(Text(key.label).font(.system(size: max(6, unit * 0.25), weight: .medium, design: .rounded)).foregroundStyle(Color.white.opacity(brightness == 0 ? 0.35 : 0.8)), at: CGPoint(x: rect.midX, y: rect.midY))

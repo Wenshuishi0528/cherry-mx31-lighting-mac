@@ -13,6 +13,7 @@ final class AppModel: ObservableObject {
     @Published var speed: Double = 2
     @Published var color = Color(red: 1, green: 0.87, blue: 0.69)
     @Published var hex = "FFDDB0"
+    @Published var rainbow = false
     @Published var profiles: [LightProfile] = []
     @Published var profileName = "我的配置"
     @Published var swapModifiers = false
@@ -27,9 +28,10 @@ final class AppModel: ObservableObject {
 
     var effect: LightEffect? { LightEffect.all.first { $0.id == mode } }
     var canEditKeys: Bool { connected && currentMappings != nil && !busy }
+    var displaysRainbow: Bool { rainbow || effect?.usesColor == false }
     var dirty: Bool {
         guard let state else { return false }
-        return state.mode != mode || Int(state.brightness) != Int(brightness) || Int(state.speed) != 4 - Int(speed) || state.hex != hex.uppercased().replacingOccurrences(of: "#", with: "")
+        return state.mode != mode || Int(state.brightness) != Int(brightness) || Int(state.speed) != 4 - Int(speed) || state.rainbow != rainbow || state.hex != hex.uppercased().replacingOccurrences(of: "#", with: "")
     }
 
     init() {
@@ -47,6 +49,7 @@ final class AppModel: ObservableObject {
     private func adopt(_ state: LightingState) {
         self.state = state; connected = true
         mode = state.mode; brightness = Double(state.brightness); speed = Double(4 - state.speed)
+        rainbow = state.rainbow
         setHex(state.hex)
     }
     func setHex(_ value: String) {
@@ -57,6 +60,19 @@ final class AppModel: ObservableObject {
     func colorChanged(_ value: Color) {
         guard let c = NSColor(value).usingColorSpace(.sRGB) else { return }
         hex = [c.redComponent, c.greenComponent, c.blueComponent].map { String(format: "%02X", Int(($0 * 255).rounded())) }.joined()
+    }
+    func selectEffect(_ value: UInt8) {
+        mode = value
+        if effect?.usesColor == false { rainbow = true }
+        if mode == 3 { rainbow = false }
+    }
+    func setColorful(_ enabled: Bool) {
+        guard !busy else { return }
+        rainbow = enabled
+        if enabled && (mode == 3 || effect == nil) { mode = 0 }
+        if !enabled && effect?.usesColor == false { mode = 3 }
+        isError = false
+        status = enabled ? "已选择彩色灯光；点击「应用到键盘」生效。" : "已选择单色灯光；点击「应用到键盘」生效。"
     }
     func randomizeColor() {
         guard !busy else { return }
@@ -70,9 +86,10 @@ final class AppModel: ObservableObject {
         } while next == previous
         let changedMode = effect?.usesColor != true
         if changedMode { mode = 3 }
+        rainbow = false
         setHex(next)
         isError = false
-        status = "已随机选色 #\(next)\(changedMode ? "，并选择常亮灯效" : "")；点击「应用到键盘」生效。"
+        status = "已随机选择单色 #\(next)\(changedMode ? "，并选择常亮灯效" : "")；点击「应用到键盘」生效。"
     }
     private func begin(_ message: String) -> Bool {
         guard !busy else { return false }
@@ -118,6 +135,7 @@ final class AppModel: ObservableObject {
         let brightness = off ? 0 : Int(self.brightness)
         let speed = off ? Int(snapshot.speed) : 4 - Int(self.speed)
         let hex = off ? snapshot.hex : self.hex
+        let rainbow = off ? snapshot.rainbow : self.rainbow
         worker.async {
             do {
                 // Persist the latest known state before any change, including on a later failure.
@@ -128,7 +146,7 @@ final class AppModel: ObservableObject {
                 }
                 try JSONEncoder().encode(before).write(to: self.backupURL, options: .atomic)
                 DispatchQueue.main.async { self.undoState = before }
-                let (_, after) = try session.writeLighting(mode: mode, brightness: brightness, speed: speed, hex: hex)
+                let (_, after) = try session.writeLighting(mode: mode, brightness: brightness, speed: speed, hex: hex, rainbow: rainbow, expectedProfileIndex: snapshot.profileIndex)
                 DispatchQueue.main.async {
                     self.adopt(after); self.busy = false
                     self.status = "\(off ? "关闭背光设置" : "灯光设置")已写入当前配置 · 读回一致，请核对实物"
@@ -176,10 +194,11 @@ final class AppModel: ObservableObject {
 
     func load(_ profile: LightProfile) {
         mode = profile.mode; brightness = Double(profile.brightness); speed = Double(4 - profile.speed)
+        rainbow = profile.rainbow
         setHex(profile.hex); status = "已载入「\(profile.name)」，点击应用写入键盘。"; isError = false
     }
     func saveProfile() {
-        let profile = LightProfile(name: profileName.trimmingCharacters(in: .whitespacesAndNewlines), mode: mode, brightness: Int(brightness), speed: 4 - Int(speed), hex: hex)
+        let profile = LightProfile(name: profileName.trimmingCharacters(in: .whitespacesAndNewlines), mode: mode, brightness: Int(brightness), speed: 4 - Int(speed), hex: hex, rainbow: rainbow)
         guard profile.valid else { fail(KeyboardError.message("请输入配置名称，并检查颜色值。")); return }
         var updated = profiles
         if let i = updated.firstIndex(where: { $0.name == profile.name }) { updated[i] = profile } else { updated.append(profile) }

@@ -2,7 +2,7 @@
 
 <img src="Resources/AppIcon.png" alt="Keyboard Lights icon" width="96" />
 
-**作者 / Author：Wenshuishi0528** · **v0.2.0** · **[CC BY-NC 4.0](LICENSE)**
+**作者 / Author：[Wenshuishi0528](https://github.com/Wenshuishi0528)** · **v0.3.0** · **[CC BY-NC 4.0](LICENSE)**
 
 为 **CHERRY MX 3.1 RGB（USB 046A:01D7）** 制作的 macOS 原生中文控制工具。在电脑上调整主键区灯效、亮度、速度和颜色，随机挑选新颜色，保存常用方案，并调整 Mac 常用按键。保留键盘板载灯效与三套配置，无需安装系统扩展。
 
@@ -15,6 +15,7 @@ A native macOS app for **CHERRY MX 3.1 RGB (USB 046A:01D7)**. Adjust main-key li
 | 功能 | Feature |
 | --- | --- |
 | 10 种内置主键区灯效选项、0–4 级亮度、5 档速度、RGB 选色 | Ten built-in main-key effect options, brightness, speed and RGB color |
+| 独立的“单色 / 彩色”选项，可启用键盘内置彩虹波浪 | A separate Single color / Rainbow selector for built-in rainbow wave lighting |
 | 随机选色，每次点击生成新的明亮颜色 | Random color button that generates a new bright color each click |
 | 自动读取当前板载配置，修改后读回核对 | Detect the active onboard slot and verify configuration readback |
 | 首次成功连接备份三套灯光，保留上次设置用于恢复 | Initial backup of all three lighting pages and undo for the last lighting change |
@@ -24,13 +25,14 @@ A native macOS app for **CHERRY MX 3.1 RGB (USB 046A:01D7)**. Adjust main-key li
 
 ## 安装与使用 / Install and use
 
-1. 从 [Releases](https://github.com/Wenshuishi0528/cherry-mx31-lighting-mac/releases) 下载 `KeyboardLights-v0.2.0-macOS-arm64.zip`，解压后打开 `键盘灯控.app`。可将应用拖到“应用程序”文件夹。
+1. 从 [Releases](https://github.com/Wenshuishi0528/cherry-mx31-lighting-mac/releases) 下载 `KeyboardLights-v0.3.0-macOS-arm64.zip`，解压后打开 `键盘灯控.app`。可将应用拖到“应用程序”文件夹。
 2. 用 USB 连接键盘，等待读取完成，确认窗口显示的板载配置编号。
 3. 如果 macOS 拒绝访问，在「系统设置 → 隐私与安全性 → 输入监控」允许本应用，再退出并重新打开。移动应用或安装新构建后可能需要重新授权。
-4. 选择灯效与颜色，或点击「随机选色」，再点击「应用到键盘」。随机选色只修改面板草稿；内置彩色模式下会选择常亮，以便所选颜色能够生效。它不持续自动循环换色。
-5. 使用「恢复上次设置」恢复上一份灯光快照；如果切换过板载配置，先切回对应配置。
+4. 要同时显示多种颜色，选择「颜色模式 → 彩色 · 彩虹」，再点击「应用到键盘」。常亮模式会切换到彩虹波浪；内置光谱循环和滚动本身使用彩色。
+5. 要使用一种颜色，选择「单色」，手动选色或点击「随机选色」，再点击「应用到键盘」。随机选色挑选的是一种单色；它不持续自动循环换色，也不会自动写入键盘。
+6. 使用「恢复上次设置」恢复上一份灯光快照；如果切换过板载配置，先切回对应配置。
 
-Download the Apple Silicon ZIP from [Releases](https://github.com/Wenshuishi0528/cherry-mx31-lighting-mac/releases), unzip it and open the app. Connect the keyboard over USB. If access is denied, enable the app in **System Settings → Privacy & Security → Input Monitoring**, then relaunch it. Choose an effect and color, or use **随机选色 / Random color**, then click **应用到键盘 / Apply**. Random color edits the draft only; it does not continuously cycle colors. For effects that own their color palette, the button selects Static so the chosen color can be used.
+Download the Apple Silicon ZIP from [Releases](https://github.com/Wenshuishi0528/cherry-mx31-lighting-mac/releases), unzip it and open the app. Connect the keyboard over USB. If access is denied, enable the app in **System Settings → Privacy & Security → Input Monitoring**, then relaunch it. For multiple colors at once, select **彩色 · 彩虹 / Rainbow** and click **应用到键盘 / Apply**; Static switches to Rainbow Wave. For a single color, select **单色 / Single color**, choose a color or use **随机选色 / Random color**, then Apply. Random color edits the draft only and does not continuously cycle colors.
 
 发布包采用 ad-hoc 签名，没有 Apple Developer ID 签名或公证。macOS 可能要求手动确认来源；不会自动降低系统安全设置。`SHA256SUMS.txt` 提供下载包校验值。
 

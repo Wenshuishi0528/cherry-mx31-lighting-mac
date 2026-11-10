@@ -1,5 +1,14 @@
 # 更新记录
 
+## 0.3.0 — 2026-11-10
+
+- 增加独立的「单色 / 彩色 · 彩虹」选项，发送键盘内置彩色标志；常亮选择彩色时切换为彩虹波浪。
+- 修正键盘示意图在单色波浪模式下仍显示彩虹的问题；彩色参数随本机方案保存，兼容旧方案。
+- 软件、仓库及发布署名统一使用 GitHub 用户名 Wenshuishi0528。
+- 彩虹波浪已由设备拥有者目视确认正常。
+
+Added an explicit Single color / Rainbow option, matching preview and profile storage with backward compatibility. Public author credits now use the GitHub username Wenshuishi0528.
+
 ## 0.2.0 — 2026-11-10
 
 - 新增随机选色，每次生成新的明亮颜色，保留手动应用；内置彩色模式下随机选色会切换为常亮。

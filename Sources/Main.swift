@@ -13,7 +13,7 @@ enum CommandLineTool {
                 let backup = FileManager.default.temporaryDirectory.appendingPathComponent("keyboard-lights-roundtrip-backup.json")
                 try JSONEncoder().encode(initial).write(to: backup, options: .atomic)
                 do {
-                    let (_, after) = try session.writeLighting(mode: 3, brightness: 1, speed: 2, hex: initial.hex == "663399" ? "336699" : "663399")
+                    let (_, after) = try session.writeLighting(mode: 3, brightness: 1, speed: 2, hex: initial.hex == "663399" ? "336699" : "663399", rainbow: false)
                     report["testSetting"] = after.bytes
                     report["writeReadbackVerified"] = true
                 } catch {

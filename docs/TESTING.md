@@ -9,12 +9,13 @@
 - `hidutil` 临时测试映射的写入、读回和原映射恢复。
 - 中文原生窗口、连接状态和当前配置编号。
 - v0.2.0 随机选色按钮连续两次生成不同颜色；作者、版本与许可在原生窗口中可见。随机选色没有写入硬件。
+- v0.3.0 的彩色标志已在实机测试；设备拥有者确认主键区同时出现多种颜色，彩虹波浪正常。
 
 The exact USB device has been tested for active-slot detection, configuration reads/writes, response checks and restoration. Static red was visually confirmed by the device owner. Device-scoped `hidutil` mapping write/readback and restoration were also checked.
 
 ## 软件检查 / Software checks
 
-`./scripts/test.sh` exercises packet size/checksum checks, mismatched responses, invalid settings and backups, preservation of unrelated mappings, built-in profile validity and slot offsets 65/129. It does not send device commands.
+`./scripts/test.sh` exercises packet size/checksum checks, mismatched responses, invalid settings and backups, preservation of unrelated mappings, built-in profile validity, slot offsets 65/129, single-color/rainbow flag updates and backward-compatible profile decoding. It does not send device commands.
 
 `./scripts/build.sh` builds the Apple Silicon application and verifies its ad-hoc signature. GitHub Actions runs these checks on macOS without a keyboard connected.
 

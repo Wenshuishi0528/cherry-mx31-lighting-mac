@@ -27,11 +27,11 @@ struct LightEffect: Identifiable, Hashable {
 }
 
 struct LightingState: Codable, Equatable {
-    // Two undocumented bytes are preserved from the device on every write.
+    // The direction byte is preserved. Byte 4 selects single color (0) or rainbow (1).
     var bytes: [UInt8]
     var profileIndex: UInt8
     init(bytes: [UInt8], profileIndex: UInt8 = 0) throws {
-        guard bytes.count == 8, bytes[1] <= 4, bytes[2] <= 4, profileIndex < 3 else {
+        guard bytes.count == 8, bytes[1] <= 4, bytes[2] <= 4, bytes[4] <= 1, profileIndex < 3 else {
             throw KeyboardError.message("键盘返回的灯光数据不符合预期，已停止操作。")
         }
         self.bytes = bytes
@@ -45,14 +45,16 @@ struct LightingState: Codable, Equatable {
     var mode: UInt8 { get { bytes[0] } set { bytes[0] = newValue } }
     var brightness: UInt8 { get { bytes[1] } set { bytes[1] = newValue } }
     var speed: UInt8 { get { bytes[2] } set { bytes[2] = newValue } }
+    var rainbow: Bool { get { bytes[4] == 1 } set { bytes[4] = newValue ? 1 : 0 } }
     var hex: String { bytes[5...7].map { String(format: "%02X", $0) }.joined() }
-    func replacing(mode: UInt8, brightness: Int, speed: Int, hex: String) throws -> LightingState {
+    func replacing(mode: UInt8, brightness: Int, speed: Int, hex: String, rainbow: Bool? = nil) throws -> LightingState {
         guard (mode == self.mode || LightEffect.all.contains(where: { $0.id == mode })), (0...4).contains(brightness),
               (0...4).contains(speed), let rgb = Self.rgb(hex) else {
             throw KeyboardError.message("请检查灯效、亮度、速度和六位颜色值。")
         }
         var value = self
         value.mode = mode; value.brightness = UInt8(brightness); value.speed = UInt8(speed)
+        if let rainbow { value.rainbow = rainbow }
         value.bytes.replaceSubrange(5...7, with: rgb)
         return value
     }
@@ -105,6 +107,23 @@ struct LightProfile: Identifiable, Codable, Equatable {
     var brightness: Int
     var speed: Int
     var hex: String
+    var rainbow: Bool = false
+    var isColorful: Bool { rainbow || LightEffect.all.first(where: { $0.id == mode })?.usesColor == false }
+    init(id: UUID = UUID(), name: String, mode: UInt8, brightness: Int, speed: Int, hex: String, rainbow: Bool = false) {
+        self.id = id; self.name = name; self.mode = mode; self.brightness = brightness
+        self.speed = speed; self.hex = hex; self.rainbow = rainbow
+    }
+    private enum CodingKeys: String, CodingKey { case id, name, mode, brightness, speed, hex, rainbow }
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        name = try values.decode(String.self, forKey: .name)
+        mode = try values.decode(UInt8.self, forKey: .mode)
+        brightness = try values.decode(Int.self, forKey: .brightness)
+        speed = try values.decode(Int.self, forKey: .speed)
+        hex = try values.decode(String.self, forKey: .hex)
+        rainbow = try values.decodeIfPresent(Bool.self, forKey: .rainbow) ?? false
+    }
     var valid: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && name.count <= 80 &&
         LightEffect.all.contains { $0.id == mode } && (0...4).contains(brightness) &&
@@ -113,6 +132,6 @@ struct LightProfile: Identifiable, Codable, Equatable {
     static let examples: [LightProfile] = [
         .init(name: "暖白工作", mode: 3, brightness: 2, speed: 2, hex: "FFDDB0"),
         .init(name: "薄荷呼吸", mode: 2, brightness: 2, speed: 3, hex: "66E3C4"),
-        .init(name: "彩虹流动", mode: 0, brightness: 3, speed: 2, hex: "FF6B91")
+        .init(name: "彩虹波浪", mode: 0, brightness: 3, speed: 2, hex: "FF6B91", rainbow: true)
     ]
 }

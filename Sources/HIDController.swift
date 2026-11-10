@@ -125,10 +125,13 @@ final class HIDSession {
         }
     }
 
-    func writeLighting(mode: UInt8, brightness: Int, speed: Int, hex: String) throws -> (LightingState, LightingState) {
+    func writeLighting(mode: UInt8, brightness: Int, speed: Int, hex: String, rainbow: Bool? = nil, expectedProfileIndex: UInt8? = nil) throws -> (LightingState, LightingState) {
         // Read fresh state to preserve firmware-owned flags and obtain an undo snapshot.
         let before = try readLighting()
-        let desired = try before.replacing(mode: mode, brightness: brightness, speed: speed, hex: hex)
+        if let expectedProfileIndex, before.profileIndex != expectedProfileIndex {
+            throw KeyboardError.message("板载配置已切换，未发送修改。请重新读取后再应用。")
+        }
+        let desired = try before.replacing(mode: mode, brightness: brightness, speed: speed, hex: hex, rainbow: rainbow)
         try transaction {
             guard try activeProfile() == before.profileIndex else { throw KeyboardError.message("板载配置已切换，未发送灯光修改，请重新读取。") }
             _ = try exchange(6, CherryPacket.lightingHeader(profile: before.profileIndex, writing: true) + desired.bytes)
