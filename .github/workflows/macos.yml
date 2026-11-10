@@ -1,0 +1,25 @@
+name: macOS checks
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Protocol and validation checks (no hardware writes)
+        run: ./scripts/test.sh
+      - name: Build Apple Silicon app
+        run: ./scripts/build.sh
+      - name: Check bundle metadata and license
+        run: |
+          plutil -lint 'dist/键盘灯控.app/Contents/Info.plist'
+          test -s 'dist/键盘灯控.app/Contents/Resources/LICENSE.txt'
+          test -s 'dist/键盘灯控.app/Contents/Resources/THIRD_PARTY_NOTICES.txt'

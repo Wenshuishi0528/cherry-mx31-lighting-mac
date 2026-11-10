@@ -1,0 +1,7 @@
+build/
+dist/
+.DS_Store
+# Local device snapshots and private validation notes
+docs/*.json
+docs/验证记录.md
+scripts/probe.swift
